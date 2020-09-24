@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
@@ -32,6 +33,7 @@ class Main
     private void GUI()
     {
         f = new JFrame();
+        boolean check = false;
         f.addWindowListener(new WindowAdapter(){
             @Override
             public void windowClosing(WindowEvent we){
@@ -41,8 +43,48 @@ class Main
         
         f.setSize(1000,800);
         f.setResizable(false);
-        loginPanel();
-        f.add(p0);
+        
+        try(FileReader fr = new FileReader("cc.txt"))
+        {
+            String uid = "",pwd = "";
+            boolean f = true;
+            int i;
+            while((i=fr.read())!=-1)
+            {
+                if((char)i=='\n')
+                {
+                    f = false;
+                }
+                if(f)
+                {
+                    uid = uid + (char)i;
+                }
+                else
+                {
+                    pwd = pwd + (char)i;
+                }
+                pwd = pwd.replace("\n","");
+                if(db.login(uid,pwd))
+                {
+                    check = true;
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            System.out.print(e);
+        }
+
+        if(check)
+        {
+            listPanel(1);
+            f.add(p1);
+        }
+        else
+        {
+            loginPanel();
+            f.add(p0);
+        }
         f.setVisible(true);
     }
     
@@ -52,32 +94,59 @@ class Main
         
         JButton login = new JButton("Login");
         JButton register = new JButton("Register");
-        login.setBounds(500,700,50,40);
-        register.setBounds(300,700,50,40);
+        login.setBounds(700,535,200,40);
+        login.setFont(new Font("Showcard Gothic",Font.BOLD,18));
+        register.setBounds(500,535,200,40);
+        register.setFont(new Font("Showcard Gothic",Font.BOLD,18));
         
         JTextField userName = new JTextField();
         JTextField userPwd = new JTextField();
-        userName.setBounds(700,100,200,40);
-        userPwd.setBounds(700,400,200,40);
+        userName.setBounds(700,190,200,40);
+        userName.setFont(new Font("Showcard Gothic",Font.BOLD,28));
+        userPwd.setBounds(700,362,200,40);
+        userPwd.setFont(new Font("Showcard Gothic",Font.BOLD,28));
+
+        Image timg1 = (new ImageIcon(getClass().getResource("/myPackage/poster.jpg"))).getImage();
+        ImageIcon img1 = new ImageIcon(timg1.getScaledInstance(460, 745, Image.SCALE_SMOOTH));
+        
+        Image timg2 = (new ImageIcon(getClass().getResource("/myPackage/foot.jpg"))).getImage();
+        ImageIcon img2 = new ImageIcon(timg2.getScaledInstance(507, 150, Image.SCALE_SMOOTH));
+        
+        Image timg3 = (new ImageIcon(getClass().getResource("/myPackage/head.jpg"))).getImage();
+        ImageIcon img3 = new ImageIcon(timg3.getScaledInstance(507, 150, Image.SCALE_SMOOTH));
         
         JLabel uName = new JLabel();
         JLabel uPwd = new JLabel();
-        uName.setText("Username");
-        uPwd.setText("Password");
-        uName.setBounds(50,100,200,40);
-        uPwd.setBounds(50,400,200,40);
-        
+        JLabel head = new JLabel(img3);
+        JLabel foot = new JLabel(img2);
+        JLabel poster = new JLabel(img1);
+        uName.setText("Username : ");
+        uName.setBounds(500,190,200,40);
+        uName.setForeground(Color.orange);
+        uName.setFont(new Font("Showcard Gothic",Font.BOLD,26));
+        uPwd.setText("Password : ");
+        uPwd.setBounds(500,362,200,40);
+        uPwd.setForeground(Color.orange);
+        uPwd.setFont(new Font("Showcard Gothic",Font.BOLD,26));
+        head.setBounds(470,10,507,150);
+        foot.setBounds(470,605,507,150);
+        poster.setBounds(10,10,460,745);
+
+        p0.setBackground(Color.decode("#09234f"));
         p0.add(login);
         p0.add(register);
         p0.add(userName);
         p0.add(userPwd);
         p0.add(uName);
         p0.add(uPwd);
+        p0.add(head);
+        p0.add(foot);
+        p0.add(poster);
 
         register.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent ae){
-                                               
+
                 if(userName.getText()!=null && !userName.getText().isEmpty())
                 {
                     if(userPwd.getText()!=null && !userPwd.getText().isEmpty())
@@ -87,11 +156,11 @@ class Main
                 }
             }
         });
-        
+
         login.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent ae){
-                
+
                 if(userName.getText()!=null && !userName.getText().isEmpty())
                 {
                     if(userPwd.getText()!=null && !userPwd.getText().isEmpty())
@@ -100,6 +169,15 @@ class Main
                         {
                             listPanel(1);
                             gotoPanel(p0,p1);
+                        try(FileWriter fw = new FileWriter("cc.txt"))
+                        {
+                            fw.write(en.encrypt(userName.getText()));
+                            fw.write("\n"+en.encrypt(userPwd.getText()));
+                        }
+                        catch(IOException e)
+                        {
+                            System.out.print(e);
+                        }
                         }
                     }
                 }
@@ -131,6 +209,7 @@ class Main
         JButton next = new JButton("→");
         JButton go = new JButton("Go");
         JButton search = new JButton("Search");
+        JButton logout = new JButton("Logout");
         previous.setBounds(10,670,100,40);
         previous.setFont(font);
         next.setBounds(120,670,100,40);
@@ -139,6 +218,8 @@ class Main
         go.setFont(font);
         search.setBounds(649,670,100,40);
         search.setFont(font);
+        logout.setBounds(10,720,100,40);
+        logout.setFont(font);
         
         String[][] a = db.getData(page);
         String[] column = {"Sr. No.","Game Name","Game ID"};
@@ -155,6 +236,7 @@ class Main
         p1.add(next);
         p1.add(go);
         p1.add(search);
+        p1.add(logout);
         p1.add(js);
         
         t.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
@@ -203,6 +285,17 @@ class Main
                 gotoPanel(p1,p3);
             }
         });
+        
+        logout.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent ae)
+            {
+                File file = new File("cc.txt");
+                file.delete();
+                loginPanel();
+                gotoPanel(p1,p0);
+            }
+        });
     }
     
     private void infoPanel(String s)
@@ -241,7 +334,7 @@ class Main
         
         setLabel();
         
-        Button back = new Button("Back");
+        JButton back = new JButton("Back");
         back.setBounds(760,720,100,40);
         back.setFont(new Font("Serif",Font.BOLD,20));
         
@@ -291,7 +384,7 @@ class Main
     
     private void setLabel()
     {
-        Image timg = (new ImageIcon(getClass().getResource("/myPackage/images.jpg"))).getImage();
+        Image timg = (new ImageIcon(getClass().getResource("/myPackage/image.jpg"))).getImage();
         ImageIcon img = new ImageIcon(timg.getScaledInstance(400, 200, Image.SCALE_SMOOTH));
         j1 = new JLabel(img);
         j1.setBounds(10,10,390,200);
