@@ -1,6 +1,9 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
@@ -9,16 +12,17 @@ import myPackage.*;
 class Main
 {
     private static JFrame f;
-    private static JPanel p0,p1,p2,p3;
+    private static JPanel p0,p1,p2,p3,p4;
     private static JTable t;
     private static JScrollPane js;
     private static JLabel j1,j2,j3;
-    private static int page,flag;
+    private static int page,infoFlag,resultFlag;
+    private static int genre,mode,per,age;
     private static String name;
     private static DbConnect db;
     private static Encode en;
     
-    public Main()
+    private Main()
     {
         GUI();
     }
@@ -33,6 +37,7 @@ class Main
     private void GUI()
     {
         f = new JFrame();
+                
         boolean check = false;
         f.addWindowListener(new WindowAdapter(){
             @Override
@@ -43,19 +48,19 @@ class Main
         
         f.setSize(1000,800);
         f.setResizable(false);
-        
+                       
         try(FileReader fr = new FileReader("cc.txt"))
         {
             String uid = "",pwd = "";
-            boolean f = true;
+            boolean l = true;
             int i;
             while((i=fr.read())!=-1)
             {
                 if((char)i=='\n')
                 {
-                    f = false;
+                    l = false;
                 }
-                if(f)
+                if(l)
                 {
                     uid = uid + (char)i;
                 }
@@ -91,7 +96,7 @@ class Main
     private void loginPanel()
     {
         p0 = new JPanel(null);
-        
+                
         JButton login = new JButton("Login");
         JButton register = new JButton("Register");
         login.setBounds(700,535,200,40);
@@ -100,26 +105,20 @@ class Main
         register.setFont(new Font("Showcard Gothic",Font.BOLD,18));
         
         JTextField userName = new JTextField();
-        JTextField userPwd = new JTextField();
+        JPasswordField userPwd = new JPasswordField();
         userName.setBounds(700,190,200,40);
-        userName.setFont(new Font("Showcard Gothic",Font.BOLD,28));
+        userName.setFont(new Font("Serif",Font.BOLD,28));
+        userName.setHorizontalAlignment(SwingConstants.CENTER);
         userPwd.setBounds(700,362,200,40);
-        userPwd.setFont(new Font("Showcard Gothic",Font.BOLD,28));
+        userPwd.setFont(new Font("Serif",Font.BOLD,28));
+        userPwd.setHorizontalAlignment(SwingConstants.CENTER);
 
-        Image timg1 = (new ImageIcon(getClass().getResource("/myPackage/poster.jpg"))).getImage();
-        ImageIcon img1 = new ImageIcon(timg1.getScaledInstance(460, 745, Image.SCALE_SMOOTH));
-        
-        Image timg2 = (new ImageIcon(getClass().getResource("/myPackage/foot.jpg"))).getImage();
-        ImageIcon img2 = new ImageIcon(timg2.getScaledInstance(507, 150, Image.SCALE_SMOOTH));
-        
-        Image timg3 = (new ImageIcon(getClass().getResource("/myPackage/head.jpg"))).getImage();
-        ImageIcon img3 = new ImageIcon(timg3.getScaledInstance(507, 150, Image.SCALE_SMOOTH));
-        
         JLabel uName = new JLabel();
         JLabel uPwd = new JLabel();
-        JLabel head = new JLabel(img3);
-        JLabel foot = new JLabel(img2);
-        JLabel poster = new JLabel(img1);
+        JLabel head = new JLabel(formatImage(getClass().getResource("/myPackage/head.jpg"),507,150));
+        JLabel foot = new JLabel(formatImage(getClass().getResource("/myPackage/foot.jpg"),507,150));
+        JLabel poster = new JLabel(formatImage(getClass().getResource("/myPackage/poster.jpg"),460,745));
+        JLabel display = new JLabel();
         uName.setText("Username : ");
         uName.setBounds(500,190,200,40);
         uName.setForeground(Color.orange);
@@ -131,6 +130,10 @@ class Main
         head.setBounds(470,10,507,150);
         foot.setBounds(470,605,507,150);
         poster.setBounds(10,10,460,745);
+        display.setBounds(500,450,400,40);
+        display.setFont(new Font("Showcard Gothic",Font.BOLD,24));
+        display.setHorizontalAlignment(SwingConstants.CENTER);
+        display.setForeground(Color.red);
 
         p0.setBackground(Color.decode("#09234f"));
         p0.add(login);
@@ -142,6 +145,7 @@ class Main
         p0.add(head);
         p0.add(foot);
         p0.add(poster);
+        p0.add(display);
 
         register.addActionListener(new ActionListener(){
             @Override
@@ -151,8 +155,23 @@ class Main
                 {
                     if(userPwd.getText()!=null && !userPwd.getText().isEmpty())
                     {
-                        db.register(en.encrypt(userName.getText()),en.encrypt(userPwd.getText()));
+                        if(db.register(en.encrypt(userName.getText()),en.encrypt(userPwd.getText())))
+                        {
+                            display.setText("Registration Succeeded!!!");
+                        }
+                        else
+                        {
+                            display.setText("Username Already Exists!");
+                        }
                     }
+                    else
+                    {
+                        display.setText("Enter Password!!!");
+                    }
+                }
+                else
+                {
+                    display.setText("Enter Username!!!");
                 }
             }
         });
@@ -179,7 +198,19 @@ class Main
                             System.out.print(e);
                         }
                         }
+                        else
+                        {
+                            display.setText("Invalid Username/Password!");
+                        }
                     }
+                    else
+                    {
+                        display.setText("Enter Password!!!");
+                    }
+                }
+                else
+                {
+                    display.setText("Enter Username!!!");
                 }
             }
         });
@@ -189,6 +220,9 @@ class Main
     {
         p1 = new JPanel(null);
         Main.page = page;
+        
+        infoFlag = 1;
+        resultFlag = 1;
         
         Font font = new Font("Serif", Font.BOLD, 20);
         
@@ -210,6 +244,7 @@ class Main
         JButton go = new JButton("Go");
         JButton search = new JButton("Search");
         JButton logout = new JButton("Logout");
+        JButton filter = new JButton("Filter");
         previous.setBounds(10,670,100,40);
         previous.setFont(font);
         next.setBounds(120,670,100,40);
@@ -220,10 +255,12 @@ class Main
         search.setFont(font);
         logout.setBounds(10,720,100,40);
         logout.setFont(font);
+        filter.setBounds(879,720,100,40);
+        filter.setFont(font);
         
-        String[][] a = db.getData(page);
-        String[] column = {"Sr. No.","Game Name","Game ID"};
-        setTable(a,column);
+        String[][] r = db.getData(page);
+        String[] c = {"Sr. No.","Game Name","Game ID"};
+        setTable(r,c,10,215,968,450);
         js.setViewportView(t);
         
         p1.setBackground(Color.decode("#0c0026"));
@@ -237,18 +274,15 @@ class Main
         p1.add(go);
         p1.add(search);
         p1.add(logout);
+        p1.add(filter);
         p1.add(js);
         
         t.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
             @Override
             public void valueChanged(ListSelectionEvent lse) {
-                String s = t.getValueAt(t.getSelectedRow(), 2).toString();
-                if(s!=null)
-                {
-                    flag=1;
-                    infoPanel(s);
+                int id = Integer.parseInt(t.getValueAt(t.getSelectedRow(), 2).toString());
+                    infoPanel(id);
                     gotoPanel(p1,p2);
-                }
             }
         });
         
@@ -296,17 +330,76 @@ class Main
                 gotoPanel(p1,p0);
             }
         });
+        
+        filter.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent ae)
+            {
+                filterPanel();
+                gotoPanel(p1,p4);
+            }
+        });
     }
     
-    private void infoPanel(String s)
+    private void infoPanel(int id)
     {
-        p2 = new JPanel();
-        Button b = new Button(s);
-        b.addActionListener(new ActionListener(){
+        p2 = new JPanel(null);
+        
+        JButton back = new JButton("Back");
+        back.setBounds(870,720,100,40);
+        back.setFont(new Font("Serif",Font.BOLD,20));
+        
+        setLabel();
+        
+        URL url = null;
+        
+        try 
+        {
+            url = new URL("https:"+db.gameInfo(id).get(2));
+        }
+        catch(MalformedURLException e)
+        {
+            System.out.print(e);
+        }
+        
+        JLabel icon = new JLabel(formatImage(url,200,200));
+        JLabel gName = new JLabel();
+        JLabel gCollection = new JLabel();
+        JLabel labelCollection = new JLabel();
+        icon.setBounds(777,220,200,200);
+        gName.setBounds(10,220,757,120);
+        gName.setHorizontalAlignment(SwingConstants.CENTER);
+        gName.setForeground(Color.orange);
+        gName.setBackground(Color.decode("#2e1447"));
+        gName.setText(db.gameInfo(id).get(0));
+        gName.setFont(dFont("Tarrget",40));
+        gName.setOpaque(true);
+        labelCollection.setBounds(10,350,150,80);
+        labelCollection.setForeground(Color.black);
+        labelCollection.setBackground(Color.decode("#a56ade"));
+        labelCollection.setText("Collection");
+        labelCollection.setFont(dFont("Vermin",18));
+        labelCollection.setHorizontalAlignment(SwingConstants.CENTER);
+        labelCollection.setOpaque(true);
+        gCollection.setBounds(170,350,597,80);
+        gCollection.setBackground(Color.decode("#a56ade"));
+        gCollection.setOpaque(true);
+        
+        p2.setBackground(Color.decode("#0c0026"));
+        p2.add(j1);
+        p2.add(j2);
+        p2.add(j3);
+        p2.add(icon);
+        p2.add(gName);
+        p2.add(labelCollection);
+        p2.add(gCollection);
+        p2.add(back);
+        
+        back.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent ae){
                 
-                switch(flag)
+                switch(infoFlag)
                 {
                 case 1:
                 {
@@ -316,21 +409,32 @@ class Main
                 }
                 case 3:
                 {
-                    search(name);
-                    resultPanel();
-                    gotoPanel(p2,p3);
-                    break;
+                    if(resultFlag == 1)
+                    {
+                        search(name);
+                        resultPanel();
+                        gotoPanel(p2,p3);
+                        break;
+                    }
+                    else
+                    {
+                        filter(genre,mode,per,age);
+                        resultPanel();
+                        gotoPanel(p2,p3);
+                        break;
+                    }
                 }
                 default:System.out.print("Fatal Error!!");
                 }
             }
         });
-        p2.add(b);
     }
     
     private void resultPanel()
     {
         p3 = new JPanel(null);
+        
+        infoFlag = 3;
         
         setLabel();
         
@@ -353,9 +457,8 @@ class Main
             public void valueChanged(ListSelectionEvent lse) {
                 try
                 {
-                    String s = t.getValueAt(t.getSelectedRow(), 2).toString();
-                    flag = 3;
-                    infoPanel(s);
+                    int id = Integer.parseInt(t.getValueAt(t.getSelectedRow(), 2).toString());
+                    infoPanel(id);
                     gotoPanel(p3,p2);
                 }
                 catch(NullPointerException e)
@@ -369,8 +472,120 @@ class Main
             @Override
             public void actionPerformed(ActionEvent ae)
             {
+                switch(resultFlag)
+                {
+                case 1:
+                {
+                    listPanel(page);
+                    gotoPanel(p3,p1);
+                    break;
+                }
+                case 4:
+                {
+                    filterPanel();
+                    gotoPanel(p3,p4);
+                    break;
+                }
+                default:System.out.print("Fatal Error!!");
+                }
+            }
+        });
+    }
+    
+    private void filterPanel()
+    {
+        p4 = new JPanel(null);
+        
+        resultFlag = 4;
+        
+        Font font = new Font("Serif",Font.BOLD,20);
+        
+        setLabel();
+        setGenre();
+        
+        genre = 0;
+        mode = 0;
+        per = 0;
+        age = 0;
+        
+        String[] modeList = {"Select Mode","Single Player","Multi-Player","Co-Op","Split Screen",
+        "MMO","Battle Royale"};
+        String[] perspectiveList = {"Select Perspective","First Person","Third Person","Bird View/Isometric",
+        "Side View","Text","Auditory","Virtual Reality"};
+        String[] ageList = {"Select Age Tag","Everybody","Teen","Mature","Adult"};
+        
+        JComboBox<String> jcbMode = new JComboBox<>(modeList);
+        JComboBox<String> jcbPer = new JComboBox<>(perspectiveList);
+        JComboBox<String> jcbAge = new JComboBox<>(ageList);
+        jcbMode.setBounds(550,215,400,100);
+        jcbMode.setFont(new Font("Showcard Gothic",Font.BOLD,32));
+        jcbPer.setBounds(550,375,400,100);
+        jcbPer.setFont(new Font("Showcard Gothic",Font.BOLD,32));
+        jcbAge.setBounds(550,535,400,100);
+        jcbAge.setFont(new Font("Showcard Gothic",Font.BOLD,32));
+        
+        JButton clear = new JButton("Clear Selection");
+        JButton back = new JButton("Back");
+        JButton filter = new JButton("Filter");
+        clear.setBounds(760,670,219,40);
+        clear.setFont(font);
+        back.setBounds(760,720,100,40);
+        back.setFont(font);
+        filter.setBounds(879,720,100,40);
+        filter.setFont(font);
+        
+        j3.setText("Filter");
+        js.setViewportView(t);
+        
+        p4.setBackground(Color.decode("#0c0026"));
+        p4.add(js);
+        p4.add(j1);
+        p4.add(j2);
+        p4.add(j3);
+        p4.add(jcbMode);
+        p4.add(jcbPer);
+        p4.add(jcbAge);
+        p4.add(clear);
+        p4.add(filter);
+        p4.add(back);
+        
+        t.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
+            @Override
+            public void valueChanged(ListSelectionEvent lse) {
+                genre = Integer.parseInt(t.getValueAt(t.getSelectedRow(), 2).toString());
+            }
+        });
+        
+        clear.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent ae)
+            {
+                t.getSelectionModel().clearSelection();
+                jcbMode.setSelectedIndex(0);
+                jcbPer.setSelectedIndex(0);
+                jcbAge.setSelectedIndex(0);
+            }
+        });
+        
+        filter.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent ae)
+            {
+                mode = jcbMode.getSelectedIndex();
+                per = jcbPer.getSelectedIndex();
+                age = jcbAge.getSelectedIndex();
+                filter(genre,mode,per,age);
+                resultPanel();
+                gotoPanel(p4,p3);
+            }
+        });
+        
+        back.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent ae)
+            {
                 listPanel(page);
-                gotoPanel(p3,p1);
+                gotoPanel(p4,p1);
             }
         });
     }
@@ -384,14 +599,13 @@ class Main
     
     private void setLabel()
     {
-        Image timg = (new ImageIcon(getClass().getResource("/myPackage/image.jpg"))).getImage();
-        ImageIcon img = new ImageIcon(timg.getScaledInstance(400, 200, Image.SCALE_SMOOTH));
-        j1 = new JLabel(img);
+        
+        j1 = new JLabel(formatImage(getClass().getResource("/myPackage/image.jpg"),400,200));
         j1.setBounds(10,10,390,200);
         
         j2 = new JLabel();
         j2.setText("G.I.R.S.");
-        j2.setFont(new Font("Showcard Gothic",Font.ITALIC,150));
+        j2.setFont(new Font("Showcard Gothic",Font.BOLD,150));
         j2.setHorizontalAlignment(SwingConstants.CENTER);
         j2.setForeground(Color.decode("#6026a1"));
         j2.setBounds(400,10,577,200);
@@ -403,12 +617,12 @@ class Main
         j3.setBounds(240,720,509,40);
     }
     
-    private void setTable(String[][] a,String[] c)
+    private void setTable(String[][] r,String[] c,int x,int y,int w,int h)
     {
         js = new JScrollPane();
-        js.setBounds(10,215,968,450);
+        js.setBounds(x,y,w,h);
 
-        t = new JTable(a,c){
+        t = new JTable(r,c){
             @Override
             public Component prepareRenderer(TableCellRenderer tcr,int row,int col)
             {
@@ -486,8 +700,67 @@ class Main
     {
         Main.name = name;
         
-        String[][] a = db.searchGame(name);
+        String[][] r = db.searchGame(name);
         String[] c = {"Sr. No.","Game Name","Game ID"};
-        setTable(a,c);
+        setTable(r,c,10,215,968,450);
+    }
+    
+    private void filter(int genre,int mode, int per,int age)
+    {
+        String[][] r = db.filterGame(genre,mode,per,age);
+        String[] c = {"Sr. No.","Game Name","Game ID"};
+        setTable(r,c,10,215,968,450);
+    }
+    
+    private void setGenre()
+    {
+        String[][] r = db.getGenre();
+        String[] c = {"Sr. No.","Genre","Genre ID"};
+        setTable(r,c,25,215,500,450);
+    }
+    
+    private ImageIcon formatImage(URL url,int w,int h)
+    {
+        ImageIcon img2 = null;
+        try
+        {
+            Image img1 = ImageIO.read(url);
+            img2 = new ImageIcon(img1.getScaledInstance(w, h, Image.SCALE_SMOOTH));
+        } 
+        catch(MalformedURLException e)
+        {
+            System.out.print(e);
+        } 
+        catch(IOException e)
+        {
+            System.out.print(e);
+        }
+        return img2;
+    }
+    
+    private Font dFont(String font,float n)
+    {
+        Font th = null;
+        try
+        {
+            switch(font)
+                {
+                case "Tarrget":
+                {
+                    th = Font.createFont(Font.TRUETYPE_FONT,new File("TarrgetHalfToneItalic-ozyV.otf"));
+                    break;
+                }
+                case "Vermin":
+                {
+                    th = Font.createFont(Font.TRUETYPE_FONT,new File("VerminVibesV-Zlg3.ttf"));
+                }
+            }
+        }
+        catch (FontFormatException | IOException e)
+        {
+            System.out.print(e);
+        }
+        
+        return th.deriveFont(n);
     }
 }
