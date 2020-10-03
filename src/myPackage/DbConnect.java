@@ -3,7 +3,7 @@ package myPackage;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class DbConnect
+class DbConnect
 {
     protected Connection con;
     protected PreparedStatement st;

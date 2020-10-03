@@ -1,26 +1,22 @@
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import javax.imageio.ImageIO;
+import java.net.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.table.*;
 import myPackage.*;
 
 class Main
 {
     private static JFrame f;
     private static JPanel p0,p1,p2,p3,p4;
-    private static JTable t;
-    private static JScrollPane js;
-    private static JLabel j1,j2,j3;
+    private static JLabel j[] = new JLabel[3];
+    private static final JScrollPane js = new JScrollPane();
+    private static JTable t = new JTable();
     private static int page,infoFlag,resultFlag;
     private static int genre,mode,per,age;
     private static String name;
-    private static DbConnect db;
     private static Encode en;
+    private static Extras ex;
     
     private Main()
     {
@@ -29,8 +25,8 @@ class Main
     
     public static void main(String[] args)
     {
-        db = new DbConnect();
         en = new Encode();
+        ex = new Extras();
         new Main();
     }
     
@@ -39,12 +35,7 @@ class Main
         f = new JFrame();
                 
         boolean check = false;
-        f.addWindowListener(new WindowAdapter(){
-            @Override
-            public void windowClosing(WindowEvent we){
-                System.exit(0);
-            }
-        });
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         f.setSize(1000,800);
         f.setResizable(false);
@@ -69,7 +60,7 @@ class Main
                     pwd = pwd + (char)i;
                 }
                 pwd = pwd.replace("\n","");
-                if(db.login(uid,pwd))
+                if(ex.login(uid,pwd))
                 {
                     check = true;
                 }
@@ -115,9 +106,9 @@ class Main
 
         JLabel uName = new JLabel();
         JLabel uPwd = new JLabel();
-        JLabel head = new JLabel(formatImage(getClass().getResource("/myPackage/head.jpg"),507,150));
-        JLabel foot = new JLabel(formatImage(getClass().getResource("/myPackage/foot.jpg"),507,150));
-        JLabel poster = new JLabel(formatImage(getClass().getResource("/myPackage/poster.jpg"),460,745));
+        JLabel head = new JLabel(ex.formatImage(getClass().getResource("/myPackage/head.jpg"),507,150));
+        JLabel foot = new JLabel(ex.formatImage(getClass().getResource("/myPackage/foot.jpg"),507,150));
+        JLabel poster = new JLabel(ex.formatImage(getClass().getResource("/myPackage/poster.jpg"),460,745));
         JLabel display = new JLabel();
         uName.setText("Username : ");
         uName.setBounds(500,190,200,40);
@@ -147,15 +138,14 @@ class Main
         p0.add(poster);
         p0.add(display);
 
-        register.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae){
+        register.addActionListener(ae -> 
+        {
 
                 if(userName.getText()!=null && !userName.getText().isEmpty())
                 {
                     if(userPwd.getText()!=null && !userPwd.getText().isEmpty())
                     {
-                        if(db.register(en.encrypt(userName.getText()),en.encrypt(userPwd.getText())))
+                        if(ex.register(en.encrypt(userName.getText()),en.encrypt(userPwd.getText())))
                         {
                             display.setText("Registration Succeeded!!!");
                         }
@@ -173,18 +163,16 @@ class Main
                 {
                     display.setText("Enter Username!!!");
                 }
-            }
         });
 
-        login.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae){
+        login.addActionListener(ae -> 
+        {
 
                 if(userName.getText()!=null && !userName.getText().isEmpty())
                 {
                     if(userPwd.getText()!=null && !userPwd.getText().isEmpty())
                     {
-                        if(db.login(en.encrypt(userName.getText()),en.encrypt(userPwd.getText())))
+                        if(ex.login(en.encrypt(userName.getText()),en.encrypt(userPwd.getText())))
                         {
                             listPanel(1);
                             gotoPanel(p0,p1);
@@ -212,7 +200,6 @@ class Main
                 {
                     display.setText("Enter Username!!!");
                 }
-            }
         });
     }
     
@@ -226,7 +213,7 @@ class Main
         
         Font font = new Font("Serif", Font.BOLD, 20);
         
-        setLabel();
+        j = ex.setLabel();
         
         JTextField tf = new JTextField();
         JTextField searchField = new JTextField();
@@ -258,15 +245,16 @@ class Main
         filter.setBounds(879,720,100,40);
         filter.setFont(font);
         
-        String[][] r = db.getData(page);
+        String[][] r = ex.getData(page);
         String[] c = {"Sr. No.","Game Name","Game ID"};
-        setTable(r,c,10,215,968,450);
+        t = ex.setTable(r,c);
+        js.setBounds(10,215,968,450);
         js.setViewportView(t);
         
         p1.setBackground(Color.decode("#0c0026"));
-        p1.add(j1);
-        p1.add(j2);
-        p1.add(j3);
+        p1.add(j[0]);
+        p1.add(j[1]);
+        p1.add(j[2]);
         p1.add(tf);
         p1.add(searchField);
         p1.add(previous);
@@ -286,58 +274,41 @@ class Main
             }
         });
         
-        previous.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                previous(p1,page);
-            }
+        previous.addActionListener(ae -> 
+        {
+            previous(p1,page);
         });
         
-        next.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                next(p1,page);
-            }
+        next.addActionListener(ae -> 
+        {
+            next(p1,page);
         });
         
-        go.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                gotoPage(p1,Integer.parseInt(tf.getText()));
-            }
+        go.addActionListener(ae -> 
+        {
+            gotoPage(p1,Integer.parseInt(tf.getText()));
         });
         
-        search.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                search(searchField.getText());
-                resultPanel();
-                gotoPanel(p1,p3);
-            }
+        search.addActionListener(ae -> 
+        {              
+            name = searchField.getText();
+            t = ex.search(name);
+            resultPanel();
+            gotoPanel(p1,p3);
         });
         
-        logout.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                File file = new File("cc.txt");
-                file.delete();
-                loginPanel();
-                gotoPanel(p1,p0);
-            }
+        logout.addActionListener(ae -> 
+        {
+            File file = new File("cc.txt");
+            file.delete();
+            loginPanel();
+            gotoPanel(p1,p0);
         });
         
-        filter.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                filterPanel();
-                gotoPanel(p1,p4);
-            }
+        filter.addActionListener(ae -> 
+        {
+            filterPanel();
+            gotoPanel(p1,p4);
         });
     }
     
@@ -349,20 +320,20 @@ class Main
         back.setBounds(870,720,100,40);
         back.setFont(new Font("Serif",Font.BOLD,20));
         
-        setLabel();
+        j = ex.setLabel();
         
         URL url = null;
         
         try 
         {
-            url = new URL("https:"+db.gameInfo(id).get(2));
+            url = new URL("https:"+ex.gameInfo(id).get(2));
         }
         catch(MalformedURLException e)
         {
             System.out.print(e);
         }
         
-        JLabel icon = new JLabel(formatImage(url,200,200));
+        JLabel icon = new JLabel(ex.formatImage(url,200,200));
         JLabel gName = new JLabel();
         JLabel gCollection = new JLabel();
         JLabel labelCollection = new JLabel();
@@ -371,14 +342,14 @@ class Main
         gName.setHorizontalAlignment(SwingConstants.CENTER);
         gName.setForeground(Color.orange);
         gName.setBackground(Color.decode("#2e1447"));
-        gName.setText(db.gameInfo(id).get(0));
-        gName.setFont(dFont("Tarrget",40));
+        gName.setText(ex.gameInfo(id).get(0));
+        gName.setFont(ex.dFont("Tarrget",40));
         gName.setOpaque(true);
         labelCollection.setBounds(10,350,150,80);
         labelCollection.setForeground(Color.black);
         labelCollection.setBackground(Color.decode("#a56ade"));
         labelCollection.setText("Collection");
-        labelCollection.setFont(dFont("Vermin",18));
+        labelCollection.setFont(ex.dFont("Vermin",18));
         labelCollection.setHorizontalAlignment(SwingConstants.CENTER);
         labelCollection.setOpaque(true);
         gCollection.setBounds(170,350,597,80);
@@ -386,46 +357,43 @@ class Main
         gCollection.setOpaque(true);
         
         p2.setBackground(Color.decode("#0c0026"));
-        p2.add(j1);
-        p2.add(j2);
-        p2.add(j3);
+        p2.add(j[0]);
+        p2.add(j[1]);
+        p2.add(j[2]);
         p2.add(icon);
         p2.add(gName);
         p2.add(labelCollection);
         p2.add(gCollection);
         p2.add(back);
         
-        back.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae){
-                
-                switch(infoFlag)
+        back.addActionListener(ae -> 
+        {
+            switch(infoFlag)
+            {
+            case 1:
+            {
+                listPanel(page);
+                gotoPanel(p2,p1);
+                break;
+            }
+            case 3:
+            {
+                if(resultFlag == 1)
                 {
-                case 1:
-                {
-                    listPanel(page);
-                    gotoPanel(p2,p1);
+                    t = ex.search(name);
+                    resultPanel();
+                    gotoPanel(p2,p3);
                     break;
                 }
-                case 3:
+                else
                 {
-                    if(resultFlag == 1)
-                    {
-                        search(name);
-                        resultPanel();
-                        gotoPanel(p2,p3);
-                        break;
-                    }
-                    else
-                    {
-                        filter(genre,mode,per,age);
-                        resultPanel();
-                        gotoPanel(p2,p3);
-                        break;
-                    }
+                    t = ex.filter(genre,mode,per,age);
+                    resultPanel();
+                    gotoPanel(p2,p3);
+                    break;
                 }
-                default:System.out.print("Fatal Error!!");
-                }
+            }
+            default:System.out.print("Fatal Error!!");
             }
         });
     }
@@ -436,20 +404,21 @@ class Main
         
         infoFlag = 3;
         
-        setLabel();
+        j = ex.setLabel();
         
         JButton back = new JButton("Back");
         back.setBounds(760,720,100,40);
         back.setFont(new Font("Serif",Font.BOLD,20));
         
-        j3.setText("Search Results!");
+        j[2].setText("Search Results!");
+        js.setBounds(10,215,968,450);
         js.setViewportView(t);
         
         p3.setBackground(Color.decode("#0c0026"));
         p3.add(js);
-        p3.add(j1);
-        p3.add(j2);
-        p3.add(j3);
+        p3.add(j[0]);
+        p3.add(j[1]);
+        p3.add(j[2]);
         p3.add(back);
         
         t.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
@@ -468,26 +437,23 @@ class Main
             }
         });
         
-        back.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
+        back.addActionListener(ae -> 
+        {
+            switch(resultFlag)
             {
-                switch(resultFlag)
-                {
-                case 1:
-                {
-                    listPanel(page);
-                    gotoPanel(p3,p1);
-                    break;
-                }
-                case 4:
-                {
-                    filterPanel();
-                    gotoPanel(p3,p4);
-                    break;
-                }
-                default:System.out.print("Fatal Error!!");
-                }
+            case 1:
+            {
+                listPanel(page);
+                gotoPanel(p3,p1);
+                break;
+            }
+            case 4:
+            {
+                filterPanel();
+                gotoPanel(p3,p4);
+                break;
+            }
+            default:System.out.print("Fatal Error!!");
             }
         });
     }
@@ -500,8 +466,8 @@ class Main
         
         Font font = new Font("Serif",Font.BOLD,20);
         
-        setLabel();
-        setGenre();
+        j = ex.setLabel();
+        t = ex.setGenre();
         
         genre = 0;
         mode = 0;
@@ -534,14 +500,15 @@ class Main
         filter.setBounds(879,720,100,40);
         filter.setFont(font);
         
-        j3.setText("Filter");
+        j[2].setText("Filter");
+        js.setBounds(25,215,500,450);
         js.setViewportView(t);
         
         p4.setBackground(Color.decode("#0c0026"));
         p4.add(js);
-        p4.add(j1);
-        p4.add(j2);
-        p4.add(j3);
+        p4.add(j[0]);
+        p4.add(j[1]);
+        p4.add(j[2]);
         p4.add(jcbMode);
         p4.add(jcbPer);
         p4.add(jcbAge);
@@ -556,37 +523,28 @@ class Main
             }
         });
         
-        clear.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                t.getSelectionModel().clearSelection();
-                jcbMode.setSelectedIndex(0);
-                jcbPer.setSelectedIndex(0);
-                jcbAge.setSelectedIndex(0);
-            }
+        clear.addActionListener(ae -> 
+        {
+            t.getSelectionModel().clearSelection();
+            jcbMode.setSelectedIndex(0);
+            jcbPer.setSelectedIndex(0);
+            jcbAge.setSelectedIndex(0);
         });
         
-        filter.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                mode = jcbMode.getSelectedIndex();
-                per = jcbPer.getSelectedIndex();
-                age = jcbAge.getSelectedIndex();
-                filter(genre,mode,per,age);
-                resultPanel();
-                gotoPanel(p4,p3);
-            }
+        filter.addActionListener(ae -> 
+        {
+            mode = jcbMode.getSelectedIndex();
+            per = jcbPer.getSelectedIndex();
+            age = jcbAge.getSelectedIndex();
+            t = ex.filter(genre,mode,per,age);
+            resultPanel();
+            gotoPanel(p4,p3);
         });
         
-        back.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent ae)
-            {
-                listPanel(page);
-                gotoPanel(p4,p1);
-            }
+        back.addActionListener(ae -> 
+        {
+            listPanel(page);
+            gotoPanel(p4,p1);
         });
     }
     
@@ -596,75 +554,17 @@ class Main
         f.add(p2);
         f.setVisible(true);
     }
-    
-    private void setLabel()
-    {
-        
-        j1 = new JLabel(formatImage(getClass().getResource("/myPackage/image.jpg"),400,200));
-        j1.setBounds(10,10,390,200);
-        
-        j2 = new JLabel();
-        j2.setText("G.I.R.S.");
-        j2.setFont(new Font("Showcard Gothic",Font.BOLD,150));
-        j2.setHorizontalAlignment(SwingConstants.CENTER);
-        j2.setForeground(Color.decode("#6026a1"));
-        j2.setBounds(400,10,577,200);
-        
-        j3 = new JLabel();
-        j3.setForeground(Color.decode("#a174d3"));
-        j3.setHorizontalAlignment(SwingConstants.CENTER);
-        j3.setFont(new Font("Showcard Gothic",Font.BOLD,28));
-        j3.setBounds(240,720,509,40);
-    }
-    
-    private void setTable(String[][] r,String[] c,int x,int y,int w,int h)
-    {
-        js = new JScrollPane();
-        js.setBounds(x,y,w,h);
 
-        t = new JTable(r,c){
-            @Override
-            public Component prepareRenderer(TableCellRenderer tcr,int row,int col)
-            {
-                Component comp = super.prepareRenderer(tcr, row, col);
-                if(!comp.getBackground().equals(getSelectionBackground()))
-                {
-                    Color bg = ((row%2==0)?Color.decode("#3b1f5b"):Color.decode("#0c0026"));
-                    comp.setBackground(bg);
-                }
-                return comp;
-            }
-        };
-        t.setRowHeight(50);
-        t.setFont(new Font("Algerian", Font.BOLD, 30));
-        t.setForeground(Color.orange);
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment( SwingConstants.CENTER );
-        t.getColumnModel().getColumn(0).setCellRenderer( centerRenderer );
-        t.getColumnModel().getColumn(1).setCellRenderer( centerRenderer );
-        t.getColumnModel().getColumn(2).setCellRenderer( centerRenderer );
-        t.getColumnModel().getColumn(0).setPreferredWidth(150);
-        t.getColumnModel().getColumn(1).setPreferredWidth(700);
-        t.getColumnModel().getColumn(2).setPreferredWidth(150);
-        t.setGridColor(Color.decode("#0c0026"));
-        
-        JTableHeader th = t.getTableHeader();
-        th.setFont(new Font("Showcard Gothic", Font.BOLD, 34));
-        th.setBackground(Color.decode("#0c0026"));
-        th.setForeground(Color.decode("#a174d3"));
-        th.setReorderingAllowed(false);
-    }
-    
     private void gotoPage(JPanel p, int page)
     {
-        if(page>=1 && page<=db.countPages())
+        if(page>=1 && page<=ex.countPages())
         {
             listPanel(page);
             gotoPanel(p,p1);
         }
         else
         {
-            j3.setText("Total Pages : "+db.countPages());
+            j[2].setText("Total Pages : "+ex.countPages());
         }
     }
     
@@ -678,13 +578,13 @@ class Main
         }
         else
         {
-            j3.setText("Reached First Page!!!");
+            j[2].setText("Reached First Page!!!");
         }
     }
     
     private void next(JPanel p,int page)
     {
-        if(page<db.countPages())
+        if(page<ex.countPages())
         {
             page = page+1;
             listPanel(page);
@@ -692,75 +592,7 @@ class Main
         }
         else
         {
-            j3.setText("Reached Last Page!!!");
+            j[2].setText("Reached Last Page!!!");
         }
-    }
-    
-    private void search(String name)
-    {
-        Main.name = name;
-        
-        String[][] r = db.searchGame(name);
-        String[] c = {"Sr. No.","Game Name","Game ID"};
-        setTable(r,c,10,215,968,450);
-    }
-    
-    private void filter(int genre,int mode, int per,int age)
-    {
-        String[][] r = db.filterGame(genre,mode,per,age);
-        String[] c = {"Sr. No.","Game Name","Game ID"};
-        setTable(r,c,10,215,968,450);
-    }
-    
-    private void setGenre()
-    {
-        String[][] r = db.getGenre();
-        String[] c = {"Sr. No.","Genre","Genre ID"};
-        setTable(r,c,25,215,500,450);
-    }
-    
-    private ImageIcon formatImage(URL url,int w,int h)
-    {
-        ImageIcon img2 = null;
-        try
-        {
-            Image img1 = ImageIO.read(url);
-            img2 = new ImageIcon(img1.getScaledInstance(w, h, Image.SCALE_SMOOTH));
-        } 
-        catch(MalformedURLException e)
-        {
-            System.out.print(e);
-        } 
-        catch(IOException e)
-        {
-            System.out.print(e);
-        }
-        return img2;
-    }
-    
-    private Font dFont(String font,float n)
-    {
-        Font th = null;
-        try
-        {
-            switch(font)
-                {
-                case "Tarrget":
-                {
-                    th = Font.createFont(Font.TRUETYPE_FONT,new File("TarrgetHalfToneItalic-ozyV.otf"));
-                    break;
-                }
-                case "Vermin":
-                {
-                    th = Font.createFont(Font.TRUETYPE_FONT,new File("VerminVibesV-Zlg3.ttf"));
-                }
-            }
-        }
-        catch (FontFormatException | IOException e)
-        {
-            System.out.print(e);
-        }
-        
-        return th.deriveFont(n);
     }
 }
