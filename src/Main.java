@@ -1,5 +1,5 @@
 import java.awt.*;
-import java.io.*;
+import java.util.prefs.Preferences;
 import java.net.*;
 import javax.swing.*;
 import javax.swing.event.*;
@@ -14,12 +14,14 @@ class Main
     private static JTable t = new JTable();
     private static int page,infoFlag,resultFlag;
     private static int genre,mode,per,age;
+    private static Preferences prefs;
     private static String name;
     private static Encode en;
     private static Extras ex;
     
     private Main()
     {
+        prefs = Preferences.userRoot().node(this.getClass().getName());
         GUI();
     }
     
@@ -40,35 +42,12 @@ class Main
         f.setSize(1000,800);
         f.setResizable(false);
                        
-        try(FileReader fr = new FileReader("cc.txt"))
+        String uid = prefs.get("Username", "");
+        String pwd = prefs.get("Password", "");
+        
+        if(ex.login(uid,pwd))
         {
-            String uid = "",pwd = "";
-            boolean l = true;
-            int i;
-            while((i=fr.read())!=-1)
-            {
-                if((char)i=='\n')
-                {
-                    l = false;
-                }
-                if(l)
-                {
-                    uid = uid + (char)i;
-                }
-                else
-                {
-                    pwd = pwd + (char)i;
-                }
-                pwd = pwd.replace("\n","");
-                if(ex.login(uid,pwd))
-                {
-                    check = true;
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            System.out.print(e);
+            check = true;
         }
 
         if(check)
@@ -106,9 +85,9 @@ class Main
 
         JLabel uName = new JLabel();
         JLabel uPwd = new JLabel();
-        JLabel head = new JLabel(ex.formatImage(getClass().getResource("/myPackage/head.jpg"),507,150));
-        JLabel foot = new JLabel(ex.formatImage(getClass().getResource("/myPackage/foot.jpg"),507,150));
-        JLabel poster = new JLabel(ex.formatImage(getClass().getResource("/myPackage/poster.jpg"),460,745));
+        JLabel head = new JLabel(ex.formatImage(getClass().getResource("/myPackage/Img/head.jpg"),507,150));
+        JLabel foot = new JLabel(ex.formatImage(getClass().getResource("/myPackage/Img/foot.jpg"),507,150));
+        JLabel poster = new JLabel(ex.formatImage(getClass().getResource("/myPackage/Img/poster.jpg"),460,745));
         JLabel display = new JLabel();
         uName.setText("Username : ");
         uName.setBounds(500,190,200,40);
@@ -174,17 +153,10 @@ class Main
                     {
                         if(ex.login(en.encrypt(userName.getText()),en.encrypt(userPwd.getText())))
                         {
+                            prefs.put("Username",en.encrypt(userName.getText()));
+                            prefs.put("Password",en.encrypt(userPwd.getText()));
                             listPanel(1);
                             gotoPanel(p0,p1);
-                        try(FileWriter fw = new FileWriter("cc.txt"))
-                        {
-                            fw.write(en.encrypt(userName.getText()));
-                            fw.write("\n"+en.encrypt(userPwd.getText()));
-                        }
-                        catch(IOException e)
-                        {
-                            System.out.print(e);
-                        }
                         }
                         else
                         {
@@ -299,8 +271,8 @@ class Main
         
         logout.addActionListener(ae -> 
         {
-            File file = new File("cc.txt");
-            file.delete();
+            prefs.put("Username","");
+            prefs.put("Password","");
             loginPanel();
             gotoPanel(p1,p0);
         });

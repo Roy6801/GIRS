@@ -20,12 +20,12 @@ public class Extras extends DbConnect
                 {
                 case "Tarrget":
                 {
-                    th = Font.createFont(Font.TRUETYPE_FONT,new File("TarrgetHalfToneItalic-ozyV.otf"));
+                    th = Font.createFont(Font.TRUETYPE_FONT,getClass().getResource("/myPackage/Font/TarrgetHalfToneItalic-ozyV.otf").openStream());
                     break;
                 }
                 case "Vermin":
                 {
-                    th = Font.createFont(Font.TRUETYPE_FONT,new File("VerminVibesV-Zlg3.ttf"));
+                    th = Font.createFont(Font.TRUETYPE_FONT,getClass().getResource("/myPackage/Font/VerminVibesV-Zlg3.ttf").openStream());
                 }
             }
         }
@@ -98,7 +98,7 @@ public class Extras extends DbConnect
     {
         JLabel j[] = new JLabel[3];
         
-        j[0] = new JLabel(formatImage(getClass().getResource("/myPackage/image.jpg"),400,200));
+        j[0] = new JLabel(formatImage(getClass().getResource("/myPackage/Img/image.jpg"),400,200));
         j[0].setBounds(10,10,390,200);
         
         j[1] = new JLabel();
