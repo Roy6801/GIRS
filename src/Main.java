@@ -119,7 +119,6 @@ class Main
 
         register.addActionListener(ae -> 
         {
-
                 if(userName.getText()!=null && !userName.getText().isEmpty())
                 {
                     if(userPwd.getText()!=null && !userPwd.getText().isEmpty())
@@ -146,7 +145,6 @@ class Main
 
         login.addActionListener(ae -> 
         {
-
                 if(userName.getText()!=null && !userName.getText().isEmpty())
                 {
                     if(userPwd.getText()!=null && !userPwd.getText().isEmpty())
