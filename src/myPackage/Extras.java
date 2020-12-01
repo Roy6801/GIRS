@@ -3,6 +3,8 @@ package myPackage;
 import java.awt.*;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.*;
@@ -20,12 +22,18 @@ public class Extras extends DbConnect
                 {
                 case "Tarrget":
                 {
-                    th = Font.createFont(Font.TRUETYPE_FONT,getClass().getResource("/myPackage/Font/TarrgetHalfToneItalic-ozyV.otf").openStream());
+                    th = Font.createFont(Font.TRUETYPE_FONT,getClass().getResource("/myPackage/Font/Tarrget.otf").openStream());
                     break;
                 }
-                case "Vermin":
+                case "VerminVibes":
                 {
-                    th = Font.createFont(Font.TRUETYPE_FONT,getClass().getResource("/myPackage/Font/VerminVibesV-Zlg3.ttf").openStream());
+                    th = Font.createFont(Font.TRUETYPE_FONT,getClass().getResource("/myPackage/Font/VerminVibes.ttf").openStream());
+                    break;
+                }
+                case "Halo3":
+                {
+                    th = Font.createFont(Font.TRUETYPE_FONT,getClass().getResource("/myPackage/Font/Halo3.ttf").openStream());
+                    break;
                 }
             }
         }
@@ -36,6 +44,7 @@ public class Extras extends DbConnect
         if(th!=null)
         {
             th = th.deriveFont(n);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(th);
         }
         
         return th;
@@ -43,17 +52,17 @@ public class Extras extends DbConnect
     
     public ImageIcon formatImage(URL url,int w,int h)
     {
-        ImageIcon img2 = null;
+        ImageIcon imageIcon = null;
         try
         {
-            Image img1 = ImageIO.read(url);
-            img2 = new ImageIcon(img1.getScaledInstance(w, h, Image.SCALE_SMOOTH));
+            Image image = ImageIO.read(url);
+            imageIcon = new ImageIcon(image.getScaledInstance(w, h, Image.SCALE_SMOOTH));
         } 
         catch(IOException e)
         {
             System.out.print(e);
         }
-        return img2;
+        return imageIcon;
     }
     
     public JTable setTable(String[][] r,String[] c)
@@ -142,5 +151,28 @@ public class Extras extends DbConnect
         t = setTable(r,c);
         
         return t;
+    }
+    
+    public String uRating(float r)
+    {
+        while(r>5)
+        {
+            r = r-5;
+        }
+        
+        String s = String.format("%.2f",r);
+        return s;
+    }
+    
+    public String set(ArrayList<String> a)
+    {
+        String s = "";
+        Iterator i = a.iterator();
+        
+        while(i.hasNext())
+        {
+            s = s+i.next()+"; ";
+        }
+        return s;
     }
 }

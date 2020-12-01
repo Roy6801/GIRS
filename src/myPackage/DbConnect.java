@@ -63,12 +63,8 @@ class DbConnect
             rs = st.executeQuery();
             rs.next();
             i = rs.getInt(1);
-
-            while(i>50)
-            {
-                p++;
-                i=i-50;
-            }
+            
+            p=i/50;
         }
         catch(SQLException e)
         {
@@ -237,7 +233,6 @@ class DbConnect
             
             rs = st.executeQuery();
             int i=0;
-            int j=1;
             while(rs.next())
             {
                 i++;
@@ -249,11 +244,10 @@ class DbConnect
             i=0;
             while(rs.next())
             {
-                s[i][0] = Integer.toString(j);
+                s[i][0] = rs.getString("Sr_No");
                 s[i][1] = rs.getString("Game_Name");
                 s[i][2] = rs.getString("Game_Id");
-                i++;
-                j++;                
+                i++;              
             }
         }
         catch(SQLException e)
@@ -266,7 +260,7 @@ class DbConnect
     public boolean login(String uid,String pwd)
     {
         flag = false;
-                
+        
         try
         {
             st = con.prepareStatement("Select * from users",
@@ -305,7 +299,6 @@ class DbConnect
             catch(SQLException e)
             {
                 System.out.print(e);
-                flag = false;
             }
         
         return flag;
@@ -376,7 +369,7 @@ class DbConnect
         
         try
         {
-            st = con.prepareStatement("With a as (Select * from games where Game_Id = (?) )"
+            st = con.prepareStatement("With a as (Select Distinct Game_Genre_Id from games where Game_Id = (?) )"
                     + " Select * from game_genres JOIN a ON game_genres.Genre_Id = a.Game_Genre_Id",
                     ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             st.setInt(1, id);
@@ -401,7 +394,7 @@ class DbConnect
         
         try
         {
-            st = con.prepareStatement("With a as (Select * from games where Game_Id = (?) )"
+            st = con.prepareStatement("With a as (Select Distinct Game_Mode_Id from games where Game_Id = (?) )"
                     + " Select * from game_modes JOIN a ON game_modes.Mode_Id = a.Game_Mode_Id",
                     ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             st.setInt(1, id);
@@ -426,7 +419,7 @@ class DbConnect
         
         try
         {
-            st = con.prepareStatement("With a as (Select * from games where Game_Id = (?) )"
+            st = con.prepareStatement("With a as (Select Distinct Player_Perspective_Id from games where Game_Id = (?) )"
                     + " Select * from game_player_perspectives JOIN a ON game_player_perspectives.Perspective_Id = a.Player_Perspective_Id",
                     ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             st.setInt(1, id);
@@ -451,7 +444,7 @@ class DbConnect
         
         try
         {
-            st = con.prepareStatement("With a as (Select * from games where Game_Id = (?) )"
+            st = con.prepareStatement("With a as (Select Distinct Age_Tag_Id from games where Game_Id = (?) )"
                     + " Select * from game_age_tags JOIN a ON game_age_tags.Age_Tag_Id = a.Age_Tag_Id",
                     ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             st.setInt(1, id);
@@ -476,7 +469,7 @@ class DbConnect
         
         try
         {
-            st = con.prepareStatement("With a as (Select * from games where Game_Id = (?) )"
+            st = con.prepareStatement("With a as (Select Distinct Game_Platform_Id from games where Game_Id = (?) )"
                     + " Select * from game_platforms JOIN a ON game_platforms.Platform_Id = a.Game_Platform_Id",
                     ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             st.setInt(1, id);
@@ -508,7 +501,7 @@ class DbConnect
         
         try
         {
-            st = con.prepareStatement("With a as (Select * from games where Game_Id = (?) )"
+            st = con.prepareStatement("With a as (Select Distinct Game_Company_Id from games where Game_Id = (?) )"
                     + " Select * from game_companies JOIN a ON game_companies.Company_Id = a.Game_Company_Id",
                     ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             st.setInt(1, id);
@@ -523,7 +516,132 @@ class DbConnect
         {
             System.out.print(e);
         }
-                
         return a;
+    }
+    
+    public void rating(int id,String uid,int rating)
+    {
+        try
+        {
+            if(rating!=0)
+            {
+                flag = false;
+                st = con.prepareStatement("select * from rating where Game_Id = (?) and uid = (?);",
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                st.setInt(1, id);
+                st.setString(2, uid);
+                rs = st.executeQuery();
+                flag = rs.next();
+                if(flag)
+                {
+                    st = con.prepareStatement("update rating set rating = (?) where Game_Id = (?) and uid = (?);",
+                        ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                    st.setInt(1, rating);
+                    st.setInt(2, id);
+                    st.setString(3, uid);
+                }
+                else
+                {
+                    st = con.prepareStatement("insert into rating(Game_Id,uid,Rating) values((?),(?),(?));",
+                        ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                    st.setInt(1, id);
+                    st.setString(2, uid);
+                    st.setInt(3, rating);
+                }
+                st.executeUpdate();
+            }
+            else
+            {
+                st = con.prepareStatement("delete from rating where Game_Id = (?) and uid = (?);",
+                        ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                st.setInt(1, id);
+                st.setString(2, uid);
+                st.executeUpdate();
+            }
+        }
+        catch(SQLException e)
+        {
+            System.out.print(e);
+        }
+    }
+    
+    public int getRating(int id,String uid)
+    {
+        int rating = 0;
+        
+        try
+        {
+            st = con.prepareStatement("select * from rating where Game_Id = (?) and uid = (?);",
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                st.setInt(1, id);
+                st.setString(2, uid);
+                rs = st.executeQuery();
+                rs.next();
+                rating = rs.getInt("Rating");
+        }
+        catch(SQLException e)
+        {
+            System.out.print(e);
+        }
+        return rating;
+    }
+    
+    public void review(int id,String uid,String review)
+    {
+        try
+        {
+            if(review!=null)
+            {
+                flag = false;
+                st = con.prepareStatement("select * from rating where Game_Id = (?) and uid = (?);",
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                st.setInt(1, id);
+                st.setString(2, uid);
+                rs = st.executeQuery();
+                flag = rs.next();
+                if(flag)
+                {
+                    st = con.prepareStatement("update rating set review = (?) where Game_Id = (?) and uid = (?);",
+                        ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                    st.setString(1, review);
+                    st.setInt(2, id);
+                    st.setString(3, uid);
+                }
+                else
+                {
+                    st = con.prepareStatement("insert into rating(Game_Id,uid,Review) values((?),(?),(?));",
+                        ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                    st.setInt(1, id);
+                    st.setString(2, uid);
+                    st.setString(3, review);
+                }
+                st.executeUpdate();
+            }
+        }
+        catch(SQLException e)
+        {
+            System.out.print(e);
+        }
+    }
+    
+    public String getReview(int id,String uid)
+    {
+        String review="";
+        
+        try
+        {
+            st = con.prepareStatement("select * from rating where Game_Id = (?) and uid = (?);",
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                st.setInt(1, id);
+                st.setString(2, uid);
+                rs = st.executeQuery();
+                rs.next();
+                review = rs.getString("Review");
+        }
+        catch(SQLException e)
+        {
+            System.out.print(e);
+        }
+        return review;
     }
 }
