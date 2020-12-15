@@ -12,7 +12,7 @@ import myPackage.*;
 class Main
 {
     private static JFrame f;
-    private static JPanel p0,p1,p2,p2d,p3,p4;
+    private static JPanel p0,p1,p2,p2d,p3,p4,p5;
     private static JLabel j[] = new JLabel[3];
     private JButton r5,r4,r3,r2,r1;
     private static final JScrollPane js = new JScrollPane();
@@ -20,7 +20,7 @@ class Main
     private static ImageIcon ustar,star;
     private static int page,infoFlag,resultFlag;
     private static int genre,mode,per,age;
-    private static int rating;
+    private static int rating,userRating;
     private static String reviewC;
     private static Preferences prefs;
     private static String name,uid,pwd;
@@ -163,6 +163,8 @@ class Main
                         {
                             prefs.put("Username",en.encrypt(userName.getText()));
                             prefs.put("Password",en.encrypt(userPwd.getText()));
+                            uid = en.encrypt(userName.getText());
+                            pwd = en.encrypt(userPwd.getText());
                             listPanel(1);
                             gotoPanel(p0,p1);
                         }
@@ -296,6 +298,8 @@ class Main
     {
         p2 = new JPanel(null);
         
+        userRating=0;
+        
         JTextField reviewField = new JTextField();
         reviewField.setBounds(10,710,610,45);
         reviewField.setFont(new Font("Serif",Font.BOLD,16));
@@ -339,17 +343,17 @@ class Main
         JLabel icon = new JLabel(ex.formatImage(url,200,200));
         JLabel gName = new JLabel("<html>"+ex.gameInfo(id).get(0)+"</html>");
         JLabel labelCollection = new JLabel("Collection");
-        JLabel gCollection = new JLabel("<html>"+ex.gameInfo(id).get(1)+"</html>");
+        JLabel gCollection = new JLabel();
         JLabel labelRelease = new JLabel("Release Date");
-        JLabel gRelease = new JLabel(""+en.timestamp(ex.gameInfo(id).get(3)));
+        JLabel gRelease = new JLabel("Unknown");
         String pop = ex.uRating(Float.parseFloat(ex.gameInfo(id).get(6)));
         JLabel popularity = new JLabel(pop);
-        JLabel gGenre = new JLabel("<html>Genre: "+ex.set(ex.gameGenre(id))+"</html");
-        JLabel gMode = new JLabel("<html>Mode: "+ex.set(ex.gameMode(id))+"</html");
-        JLabel gPerspective = new JLabel("<html>Perspective: "+ex.set(ex.gamePerspective(id))+"</html");
-        JLabel gAge = new JLabel("<html><center>For<br><br><br>"+ex.set(ex.gameAge(id)).replaceAll(";","")+"</html");
-        JLabel gPlatform = new JLabel("<html>Platform: "+ex.set(ex.gamePlatform(id))+"</html");
-        JLabel gCompany = new JLabel("<html>Company: "+ex.set(ex.gameCompany(id))+"</html");
+        JLabel gGenre = new JLabel("Genre: Unknown");
+        JLabel gMode = new JLabel("Mode: Unknown");
+        JLabel gPerspective = new JLabel("Perspective: Unknown");
+        JLabel gAge = new JLabel("<html><center>Age<br>Group<br>Unknown</html>");
+        JLabel gPlatform = new JLabel("Platform: Unknown");
+        JLabel gCompany = new JLabel("Company: Unknown");
         
         Border border = BorderFactory.createLineBorder(Color.decode("#0c0026"));
         Border b = new EmptyBorder(10,10,10,10);
@@ -390,6 +394,10 @@ class Main
         gCollection.setBounds(170,220,597,60);
         gCollection.setForeground(Color.decode("#ff1f00"));
         gCollection.setBackground(Color.decode("#24154d"));
+        if(ex.gameInfo(id).get(1)!=null)
+        {
+            gCollection.setText("<html>"+ex.gameInfo(id).get(1)+"</html>");
+        }
         gCollection.setFont(ex.dFont("VerminVibes",30));
         gCollection.setHorizontalAlignment(SwingConstants.CENTER);
         gCollection.setOpaque(true);
@@ -404,6 +412,10 @@ class Main
         gRelease.setBounds(220,290,400,60);
         gRelease.setForeground(Color.decode("#ff3700"));
         gRelease.setBackground(Color.decode("#412a80"));
+        if(ex.gameInfo(id).get(3)!=null)
+        {
+            gRelease.setText(""+en.timestamp(ex.gameInfo(id).get(3)));
+        }
         gRelease.setHorizontalAlignment(SwingConstants.CENTER);
         gRelease.setFont(ex.dFont("VerminVibes", 20));
         gRelease.setOpaque(true);
@@ -411,6 +423,10 @@ class Main
         gGenre.setBounds(10,360,610,60);
         gGenre.setForeground(Color.decode("#ff7700"));
         gGenre.setBackground(Color.decode("#744fb0"));
+        if(ex.gameGenre(id)!=null)
+        {
+            gGenre.setText("<html>Genre: "+ex.set(ex.gameGenre(id))+"</html");
+        }
         gGenre.setFont(ex.dFont("VerminVibes", 15));
         gGenre.setBorder(b);
         gGenre.setOpaque(true);
@@ -418,6 +434,10 @@ class Main
         gMode.setBounds(10,430,610,60);
         gMode.setForeground(Color.decode("#ff8c00"));
         gMode.setBackground(Color.decode("#7e4899"));
+        if(ex.gameMode(id)!=null)
+        {
+            gMode.setText("<html>Mode: "+ex.set(ex.gameMode(id))+"</html");
+        }
         gMode.setFont(ex.dFont("VerminVibes", 15));
         gMode.setBorder(b);
         gMode.setOpaque(true);
@@ -425,6 +445,10 @@ class Main
         gPerspective.setBounds(10,500,610,60);
         gPerspective.setForeground(Color.decode("#ffa600"));
         gPerspective.setBackground(Color.decode("#683582"));
+        if(ex.gamePerspective(id)!=null)
+        {
+            gPerspective.setText("<html>Perspective: "+ex.set(ex.gamePerspective(id))+"</html");
+        }
         gPerspective.setFont(ex.dFont("VerminVibes", 15));
         gPerspective.setBorder(b);
         gPerspective.setOpaque(true);
@@ -432,6 +456,10 @@ class Main
         gPlatform.setBounds(10,570,610,60);
         gPlatform.setForeground(Color.decode("#ffbf00"));
         gPlatform.setBackground(Color.decode("#4e2066"));
+        if(ex.gamePlatform(id)!=null)
+        {
+            gPlatform.setText("<html>Platform: "+ex.set(ex.gamePlatform(id))+"</html");
+        }
         gPlatform.setFont(ex.dFont("VerminVibes", 15));
         gPlatform.setBorder(b);
         gPlatform.setOpaque(true);
@@ -439,6 +467,10 @@ class Main
         gCompany.setBounds(10,640,610,60);
         gCompany.setForeground(Color.decode("#ffd500"));
         gCompany.setBackground(Color.decode("#4d158c"));
+        if(ex.gameCompany(id)!=null)
+        {
+            gCompany.setText("<html>Company: "+ex.set(ex.gameCompany(id))+"</html");
+        }
         gCompany.setFont(ex.dFont("VerminVibes", 15));
         gCompany.setBorder(b);
         gCompany.setOpaque(true);
@@ -453,6 +485,10 @@ class Main
         gAge.setBounds(630,480,137,180);
         gAge.setForeground(Color.decode("#fca61c"));
         gAge.setBackground(Color.decode("#4d158c"));
+        if(!ex.gameAge(id).isEmpty())
+        {
+            gAge.setText("<html><center>For<br><br><br>"+ex.set(ex.gameAge(id)).replaceAll(";","")+"</html");
+        }
         gAge.setHorizontalAlignment(SwingConstants.CENTER);
         gAge.setFont(ex.dFont("VerminVibes", 18));
         gAge.setOpaque(true);
@@ -594,39 +630,42 @@ class Main
         r5.addActionListener(ae ->
         {
             r5();
-            ex.rating(id,uid,5);
+            userRating = 5;
+            ex.rating(id,uid,userRating);
         });
         
         r4.addActionListener(ae ->
         {
             r4();
-            ex.rating(id,uid,4);
+            userRating = 4;
+            ex.rating(id,uid,userRating);
         });
         
         r3.addActionListener(ae ->
         {
             r3();
-            ex.rating(id,uid,3);
+            userRating = 3;
+            ex.rating(id,uid,userRating);
         });
         
         r2.addActionListener(ae ->
         {
             r2();
-            ex.rating(id,uid,2);
+            userRating = 2;
+            ex.rating(id,uid,userRating);
         });
         
         r1.addActionListener(ae ->
         {
             r1();
-            ex.rating(id,uid,1);
+            userRating = 1;
+            ex.rating(id,uid,userRating);
         });
         
         review.addActionListener(ae ->
         {
-            if(!reviewField.getText().isBlank())
-            {
-                ex.review(id, uid, reviewField.getText());
-            }
+            reviewPanel(reviewField.getText(),id);
+            gotoPanel(p2, p5);
         });
         
         more.addActionListener(ae ->
@@ -671,6 +710,39 @@ class Main
             }
             default:System.out.print("Fatal Error!!");
             }
+        });
+    }
+    
+    private void reviewPanel(String review,int id)
+    {
+        p5 = new JPanel(null);
+        
+        JButton back = new JButton("Back");
+        back.setBounds(882,720,95,35);
+        back.setFont(new Font("Serif",Font.BOLD,20));
+        
+        String[][] r = ex.allReviews(id);
+        String[] c = {"User","Review","Rating"};
+
+        t = ex.setTable(r,c);
+
+        js.setBounds(10,10,967,700);
+        js.setViewportView(t);
+        js.setOpaque(true);
+        
+        if(review!=null)
+        {
+            ex.review(id, uid, review);
+        }
+        
+        p5.setBackground(Color.decode("#0c0026"));
+        p5.add(js);
+        p5.add(back);
+        
+        back.addActionListener(ae -> 
+        {
+            infoPanel(id);
+            gotoPanel(p5, p2);
         });
     }
     

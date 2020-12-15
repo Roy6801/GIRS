@@ -3,8 +3,10 @@ package myPackage;
 import java.sql.*;
 import java.util.ArrayList;
 
+
 class DbConnect
 {
+    private Encode en = new Encode();
     protected Connection con;
     protected PreparedStatement st;
     protected ResultSet rs;
@@ -563,6 +565,26 @@ class DbConnect
         {
             System.out.print(e);
         }
+        
+        try
+        {
+            st = con.prepareStatement("select avg(rating) as Average from rating where Game_Id = (?);",
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            st.setInt(1, id);
+            rs = st.executeQuery();
+            rs.next();
+            float avg  = Float.parseFloat(rs.getString("Average"));
+            
+            st = con.prepareStatement("update game_list set Popularity = (?) where Game_Id = (?);",
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            st.setFloat(1, avg);
+            st.setInt(2, id);
+            st.executeUpdate();
+        }
+        catch(SQLException e)
+        {
+            System.out.print(e);
+        }
     }
     
     public int getRating(int id,String uid)
@@ -643,5 +665,40 @@ class DbConnect
             System.out.print(e);
         }
         return review;
+    }
+    
+    public String[][] allReviews(int id)
+    {
+        String[][] s = null;
+        int i=0;
+        
+        try
+        {
+            st = con.prepareStatement("select * from rating where Game_Id = (?);",
+                        ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            st.setInt(1,id);
+            rs = st.executeQuery();
+            while(rs.next())
+            {
+                i++;
+            }
+            
+            i = (i>14?i:14);
+            s = new String[i][3];
+            rs.beforeFirst();
+            i=0;
+            while(rs.next())
+            {
+                s[i][0] = en.decrypt(rs.getString("uid"));
+                s[i][1] = rs.getString("Review");
+                s[i][2] = rs.getString("Rating");
+                i++;
+            }
+        }
+        catch(SQLException e)
+        {
+            System.out.print(e);
+        }
+        return s;
     }
 }
